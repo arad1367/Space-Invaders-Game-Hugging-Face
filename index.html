@@ -146,6 +146,19 @@
             let invaderInterval;
             let username = '';
 
+            // Determine if touch events are supported
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+
+            if (isTouchDevice) {
+                // Touch events for mobile devices
+                game.addEventListener('touchstart', handleTouchStart);
+                game.addEventListener('touchmove', handleTouchMove);
+                game.addEventListener('touchend', handleTouchEnd);
+            } else {
+                // Keyboard events for desktop
+                document.addEventListener('keydown', movePlayer);
+            }
+
             buttons.forEach(button => {
                 button.addEventListener('click', (e) => {
                     username = usernameInput.value.trim();
@@ -167,7 +180,6 @@
                     invaderSpeed = 14; // Fast level (3 times faster)
                 }
                 createInvaders();
-                document.addEventListener('keydown', movePlayer);
                 invaderInterval = setInterval(moveInvaders, 500);
                 setInterval(createInvaders, 5000); // Create new invaders every 5 seconds
 
@@ -190,7 +202,35 @@
                 }
             }
 
-            // Move player
+            // Handle touch events for player movement and shooting
+            let touchStartX = null;
+            function handleTouchStart(event) {
+                const touch = event.touches[0];
+                touchStartX = touch.clientX;
+            }
+
+            function handleTouchMove(event) {
+                event.preventDefault();
+            }
+
+            function handleTouchEnd(event) {
+                const touch = event.changedTouches[0];
+                const touchEndX = touch.clientX;
+
+                // Determine swipe direction or tap for shooting
+                if (touchEndX < touchStartX) {
+                    // Swipe left
+                    movePlayer({ key: 'ArrowLeft' });
+                } else if (touchEndX > touchStartX) {
+                    // Swipe right
+                    movePlayer({ key: 'ArrowRight' });
+                } else {
+                    // Tap for shooting
+                    shoot();
+                }
+            }
+
+            // Move player based on keyboard events
             function movePlayer(e) {
                 switch (e.key) {
                     case 'ArrowLeft':
